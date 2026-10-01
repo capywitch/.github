@@ -1,5 +1,4 @@
-```markdown
-# TCGRP — TCG Rio Preto & Região
+# TCGRP — TCG Rio Preto & Region
 
 **Connecting players, stores, and communities through technology.**
 
@@ -11,7 +10,7 @@
 
 ## About TCGRP
 
-TCGRP (TCG Rio Preto & Região) is an independent technology initiative focused on the Trading Card Game community.
+TCGRP (TCG Rio Preto & Region) is an independent technology initiative focused on the Trading Card Game community.
 
 Our goal is to connect players, local game stores, tournament organizers, and content creators through digital tools that make the TCG ecosystem more accessible, organized, and collaborative.
 
@@ -120,4 +119,3 @@ Whether you are a player, store owner, tournament organizer, or developer, you a
 <p align="center">
   <strong>TCGRP — Connecting the TCG community through technology.</strong>
 </p>
-```
