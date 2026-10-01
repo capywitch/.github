@@ -1,4 +1,4 @@
-# TCGRP — TCG Rio Preto & Region
+# TCGRP: TCG Rio Preto & Region
 
 **Connecting players, stores, and communities through technology.**
 
@@ -22,7 +22,7 @@ We believe technology can help communities grow by making information accessible
 
 The TCGRP ecosystem currently includes three web applications.
 
-### 1. TCGRP — Community Platform
+### 1. TCGRP: Community Platform
 
 🌐 **[tcgrp.com.br](https://tcgrp.com.br)**
 
@@ -87,8 +87,8 @@ For specific dependencies, setup instructions, and development workflows, refer 
 
 Explore our repositories to learn more about the implementation of each project.
 
-- [TCGRP on GitHub](https://github.com/tcgrp)
-- [MTG Bracket Analyzer](https://github.com/johnywalves/mtg-bracket-analyzer)
+- [TCGRP on GitHub](https://github.com/capywitch)
+- [MTG Bracket Analyzer](https://github.com/capywitch/bracket)
 
 More repositories and project documentation will be listed here as the ecosystem evolves.
 
@@ -117,5 +117,5 @@ Whether you are a player, store owner, tournament organizer, or developer, you a
 ---
 
 <p align="center">
-  <strong>TCGRP — Connecting the TCG community through technology.</strong>
+  <strong>TCGRP: Connecting the TCG community through technology.</strong>
 </p>
