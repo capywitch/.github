@@ -5,6 +5,7 @@
 [![Website](https://img.shields.io/badge/Website-tcgrp.com.br-138ae0?style=for-the-badge)](https://tcgrp.com.br)
 [![Oracle](https://img.shields.io/badge/Oracle-oracle.tcgrp.com.br-8b5cf6?style=for-the-badge)](https://oracle.tcgrp.com.br)
 [![Bracket Analyzer](https://img.shields.io/badge/Bracket-bracket.tcgrp.com.br-e0138c?style=for-the-badge)](https://bracket.tcgrp.com.br)
+[![Vision](https://img.shields.io/badge/Vision-vision.tcgrp.com.br-06b6d4?style=for-the-badge)](https://vision.tcgrp.com.br)
 
 ---
 
@@ -20,7 +21,7 @@ We believe technology can help communities grow by making information accessible
 
 ## Our Projects
 
-The TCGRP ecosystem currently includes three web applications.
+The TCGRP ecosystem currently includes four web applications.
 
 ### 1. TCGRP: Community Platform
 
@@ -61,6 +62,23 @@ The project aims to help players understand deck composition and evaluate how th
 
 Its development focuses on a modular analysis engine and a web interface, with an architecture that supports independent evolution of the analysis logic and user experience.
 
+### 4. TCGRP Vision
+
+📷 **[vision.tcgrp.com.br](https://vision.tcgrp.com.br)**
+
+The computer vision project of the TCGRP ecosystem: a Magic: The Gathering card scanner that identifies cards from a camera or an uploaded photo.
+
+Recognition combines image hashing, a card classifier, OCR, and embedding similarity, served by a private API. Vision also hosts the ingest endpoints for the ESP32-CAM card sorter and a restricted management area to review samples, benchmark the pipeline, and calibrate detection.
+
+**Features**
+- Single-photo scanner and live camera scanner with card detection.
+- Card recognition pipeline: hash matching, classifier, OCR, and embeddings.
+- Training pipeline for the models (dataset, embeddings, classifier, OCR).
+- ESP32-CAM firmware and device API keys for the card sorter.
+- Management area for sample annotation, benchmarks, diagnostics, and parameter tuning.
+
+Sign-in uses the same Google account as the TCGRP platform.
+
 ## Our Philosophy
 
 - **Community first:** Technology should help players, stores, and organizers.
@@ -76,9 +94,10 @@ Our projects use modern web technologies and development practices. The technolo
 Some of the technologies used across the ecosystem include:
 
 - **Frontend:** React, Next.js, TypeScript
-- **Backend:** Node.js, Python
+- **Backend:** Node.js, Python (FastAPI)
 - **Databases:** PostgreSQL, MySQL
 - **Infrastructure:** Docker, CI/CD
+- **Machine learning:** PyTorch, ONNX Runtime, OpenCV
 - **Development:** Git, automated testing, and modular architecture
 
 For specific dependencies, setup instructions, and development workflows, refer to the documentation in each repository.
@@ -89,6 +108,7 @@ Explore our repositories to learn more about the implementation of each project.
 
 - [TCGRP on GitHub](https://github.com/capywitch)
 - [MTG Bracket Analyzer](https://github.com/capywitch/bracket)
+- [TCGRP Vision](https://github.com/capywitch/vision)
 
 More repositories and project documentation will be listed here as the ecosystem evolves.
 
