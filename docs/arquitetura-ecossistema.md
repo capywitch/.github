@@ -43,7 +43,7 @@ flowchart LR
     BW[web_bracket]
     BA[api_bracket]
   end
-  UI[[@capywitch/ui]]
+  UI["@capywitch/ui"]
   FB{{Firebase Auth}}
   SF{{Scryfall}}
 
