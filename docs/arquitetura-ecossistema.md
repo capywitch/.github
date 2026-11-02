@@ -6,7 +6,8 @@ Mapa de como os projetos se conectam e do que compartilham. Gerado a partir do c
 
 | Repo | Domínio | Stack | Papel |
 | --- | --- | --- | --- |
-| `tcgrp.com.br` | tcgrp.com.br | Next.js 16, Strapi (Postgres), bot WhatsApp, worker, app Expo (monorepo pnpm/turbo) | Plataforma da comunidade: eventos, lojas, RPG, singles tenho/quero, Gestor |
+| `tcgrp.com.br` | tcgrp.com.br | Next.js 16, bot WhatsApp, worker, app Expo (monorepo pnpm/turbo) | Plataforma da comunidade: eventos, lojas, RPG, singles tenho/quero, Gestor |
+| `backoffice` | cms.tcgrp.com.br | Strapi + Postgres | CMS compartilhado pelo site TCGRP e pelo projeto vision |
 | `oracle` | oracle.tcgrp.com.br, cdn.tcgrp.com.br | FastAPI + Postgres, scheduler, nginx (CDN), Next.js | Catálogo unificado de cartas (Magic, Pokémon, Digimon, Riftbound) + imagens |
 | `vision` | vision.tcgrp.com.br | Next.js (`web/`), FastAPI (`card-recognition/`), pipeline ML, firmware ESP32 | Scanner de cartas MTG, ambiente Gestor do scanner, treino |
 | `bracket` | bracket.tcgrp.com.br | Next.js (`web/`) + FastAPI (`backend/`) | Análise de decks Commander / brackets |
@@ -23,9 +24,11 @@ flowchart LR
   end
 
   subgraph tcgrp[tcgrp.com.br]
-    TW[web]
-    TS[(Strapi + Postgres)]
+    TW[platform-web]
     TB[bot / worker]
+  end
+  subgraph backoffice[backoffice]
+    TS[(Strapi + Postgres)]
   end
   subgraph oracle[oracle]
     OA[oracle-api]
@@ -47,6 +50,7 @@ flowchart LR
   FB{{Firebase Auth}}
   SF{{Scryfall}}
 
+  B -->|HTTPS| VW
   TW -->|ORACLE_API_URL, server-side| OA
   TW --> TS
   TB --> TS
@@ -54,9 +58,9 @@ flowchart LR
   B -->|NEXT_PUBLIC_ORACLE_API_URL, CORS| OA
   VW -->|ORACLE_API_URL| OA
   VW -->|STRAPI_URL + token| TS
-  VW -->|EMBEDDING_SERVICE_SECRET| VR
+  VW -->|HTTP interno /identify + X-Internal-Secret| VR
   ESP -->|/api/magic-scanner/*| VW
-  VM -->|STRAPI_URL| TS
+  VM -.->|STRAPI_URL + token, sync opcional de amostras| TS
   OA --> OV
   OC --> OV
   OW --> OA
@@ -69,6 +73,11 @@ flowchart LR
   UI -.-> TW & OW & VW & BW
 ```
 
+O browser acessa o scanner no `vision-web`; o TCGRP web não chama o serviço
+`card-recognition`. O FastAPI só recebe requisições server-side do `vision-web`
+pela rede interna do projeto. `EMBEDDING_SERVICE_SECRET` é compartilhado entre
+esses dois serviços para validar `X-Internal-Secret`.
+
 ## 3. Conexões entre projetos
 
 | Origem | Destino | Como | Config |
@@ -78,7 +87,7 @@ flowchart LR
 | `vision` web (browser) | `oracle` API | HTTP direto do browser (scanner client-side, cache IndexedDB `oracle-cache`) | `NEXT_PUBLIC_ORACLE_API_URL` (build) + `CORS_ORIGINS` do Oracle |
 | `vision` web | `tcgrp` Strapi | REST: scanner-amostras, scanner-dispositivos, grupos-de-coleta, cartas-coletadas, cartas, jogos, lojas, usuarios, upload | `STRAPI_URL`, `STRAPI_INTERNAL_URL`, `STRAPI_API_TOKEN`, `NEXT_PUBLIC_STRAPI_URL` |
 | `vision` ml-pipeline | `tcgrp` Strapi | Lê amostras/coletas para treino | `STRAPI_URL`, `STRAPI_API_TOKEN` |
-| `vision` web | `vision` card-recognition | HTTP interno, alias `vision-card-recognition` na rede `coolify`, porta 9800 | `EMBEDDING_SERVICE_INTERNAL_URL`, `EMBEDDING_SERVICE_SECRET` |
+| `vision` web | `vision` card-recognition | HTTP interno pela rede Docker `vision-internal` (`POST /identify`, porta 9800); FastAPI sem acesso público | `EMBEDDING_SERVICE_INTERNAL_URL=http://card-recognition:9800`, `EMBEDDING_SERVICE_SECRET` (`X-Internal-Secret`) |
 | ESP32 | `vision` web | HTTP `/api/magic-scanner/*` | `DEVICE_INGEST_SECRET` (legado) + secret por dispositivo |
 | `tcgrp` web | `tcgrp` bot | HTTP interno | `BOT_URL=http://tcgrp-bot:3001` |
 | `oracle` web | `oracle` API | HTTP interno | `ORACLE_API_URL=http://oracle-api:8000` |
@@ -90,15 +99,15 @@ flowchart LR
 ## 4. Recursos compartilhados
 
 ### Infra (Coolify / Docker)
-- **Rede Docker externa `coolify`**: todos os serviços expostos entram nela. Comunicação entre stacks é por nome/alias nessa rede (`tcgrp-strapi`, `tcgrp-web`, `tcgrp-bot`, `vision-card-recognition`, `oracle-api`).
+- **Rede Docker externa `coolify`**: serviços publicados pelo Traefik entram nela. A interface `vision-web` é publicada; `card-recognition` também se conecta à rede com o alias `vision-card-recognition`, mas seu acesso normal é server-side pela rede interna do `vision`.
 - **Traefik** (labels `traefik.docker.network=coolify`) para roteamento e domínios.
-- Redes `instance` por stack (`tcgrp-net`, `oracle-net`, `vision`) isolam Postgres e serviços internos.
+- Redes por stack (`tcgrp-net`, `oracle-net`, `vision-internal`) isolam Postgres e serviços internos.
 - Prefixos de serviço (`oracle-*`, `tcgrp-*`) evitam colisão de DNS na rede `coolify`.
 - **Cloudflare** na frente do CDN.
 
 ### Identidade e segredos
 - **Projeto Firebase único**: `tcgrp.com.br` e `vision` usam o mesmo (login Google, Admin SDK). Domínio do vision precisa estar em Authorized domains.
-- `EMBEDDING_SERVICE_SECRET`: mesmo valor em `vision-web` e `card-recognition`. O README do `tcgrp.com.br` ainda o lista (herança da época em que o scanner vivia lá) **(verificar se ainda é usado)**.
+- `EMBEDDING_SERVICE_SECRET`: mesmo valor em `vision-web` e `card-recognition`; não é necessário na web do TCGRP.
 - `STRAPI_API_TOKEN`: token do Strapi do TCGRP entregue ao `vision`.
 - `NPM_TOKEN` (`read:packages`): build secret em `oracle-web`, `vision-web`, `web_bracket` para instalar `@capywitch/ui`.
 
@@ -115,9 +124,9 @@ flowchart LR
 ## 5. Pontos de atenção
 
 1. **CORS do Oracle**: o scanner roda no browser em `vision.tcgrp.com.br`. `CORS_ORIGINS` precisa incluir esse domínio, não só `tcgrp.com.br` **(verificar em produção)**.
-2. **Doc defasada no `tcgrp.com.br/README.md`**: cita o alias `vision-card-recognition` e `EMBEDDING_SERVICE_SECRET` como se a web do TCGRP chamasse o reconhecimento. O código atual não faz isso; só `vision-web` fala com `card-recognition`.
+2. **Fronteira do scanner**: a interface e as APIs do scanner estão no `vision`; o BackOffice mantém os content types do Strapi usados por ele. O TCGRP web não chama `card-recognition`.
 3. **Acoplamento vision → Strapi**: mudança de schema em `scanner-amostras`, `scanner-dispositivos`, `grupos-de-coleta`, `cartas-coletadas` quebra o `vision`. Sem contrato versionado.
 4. **Acoplamento tcgrp/vision → Oracle**: ambos dependem das rotas `/cards/by-name`, `/cards/fuzzy`, `/cards/by-name/{name}/arts`, `/cards/autocomplete`.
 5. **Oracle mounted volume**: montagem `ro` de `oracle-assets` no `vision` pendente.
-6. **Ordem de deploy**: Oracle → Strapi (tcgrp) → vision → web do tcgrp. `vision` não sobe sem `STRAPI_URL`, `ORACLE_API_URL`, `NEXT_PUBLIC_ORACLE_API_URL` e `EMBEDDING_SERVICE_SECRET` (compose usa `:?`).
+6. **Ordem de deploy**: Strapi (BackOffice) e Oracle precisam estar disponíveis para a interface do `vision`, que exige `STRAPI_URL`, `STRAPI_API_TOKEN`, `ORACLE_API_URL`, `NEXT_PUBLIC_ORACLE_API_URL` e `EMBEDDING_SERVICE_SECRET` no Compose. A web do TCGRP é implantada independentemente do `vision`; ambas usam o Strapi.
 7. **`crew`** tem caminhos relativos fixos; exige os repos como irmãos no mesmo diretório.
